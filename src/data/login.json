@@ -1,0 +1,23 @@
+{
+  "results": {
+    "users": [
+      {
+        "name": "Adam",
+        "surname": "Ivankovic",
+        "age": "28",
+        "gender": "male",
+        "login": {
+          "username": "adivank",
+          "email": "adivank@gmail.com",
+          "password": "123456"
+        },
+        "address": {
+          "city": "Sveta Nedjelja",
+          "strees": "Matije Gupca",
+          "streetNo": "12",
+          "postal": "10437"
+        }
+      }
+    ] 
+  }
+}
