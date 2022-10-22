@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+
 const db = require('../data/login.json');
 
 module.exports = async (req, res) => {
