@@ -41,9 +41,29 @@ const userSchema = new Schema({
   password: {
     type: String,
     required: true
+  },
+  name: {
+    type: String,
+    required: true
+  },
+  surname: {
+    type: String,
+    required: true
+  }
+});
+
+const postSchema = new Schema({
+  user: {
+    type: Object,
+    required: true
+  },
+  post: {
+    type: Object,
+    required: true
   }
 })
 
+const Post = mongoose.model('Post', postSchema);
 const User = mongoose.model('User', userSchema);
 
 /**
@@ -59,18 +79,22 @@ app.post('/login', async (req, res) => {
   const {username, password} = req.body;
   const foundUser = User.findOne({username}, (err, found) => {
     if (!err) {
-      if(found.password === password) {
+      if(found && found.password === password) {
         const token = jwt.sign({name: found.username}, 'hello', { expiresIn: "1h" });
 
         return res.cookie("auth._token.cookie", token, {
           httpOnly: true
         }).send({
-          username: found.username
+          username: found.username,
+          name: found.name,
+          surname: found.surname
         });
       } else {
-        res.send({
-          error: 'Wrong Username or Password'
-        })
+        const error = {
+          errorDescription: 'Wrong Username or Password',
+          errorClass: 'toast-error',
+        };
+        res.send({ error });
       };
     } else {
       console.log(err);
@@ -81,11 +105,13 @@ app.post('/login', async (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-  const {username, password} = req.body;
+  const {username, password, name, surname} = req.body;
   try {
     await User.create({
       username,
-      password
+      password,
+      name,
+      surname
     })
     .then(newUser => {
       const token = jwt.sign({name: newUser.username}, 'hello', { expiresIn: "1h" });
@@ -93,13 +119,35 @@ app.post('/register', async (req, res) => {
       return res.cookie("auth._token.cookie", token, {
         httpOnly: true
       }).send({
-        username: newUser.username
+        username: newUser.username,
+        name: newUser.name,
+        surname: newUser.surname
       });
     });
   } catch(error) {
     console.log(error);
   }
 });
+
+app.post('/create-post', async (req, res) => {
+  const { user, post } = req.body;
+  try {
+    await Post.create({
+      user,
+      post
+    })
+
+    res.send('Success');
+  } catch(err) {
+    console.log(err);
+  }
+})
+
+app.get('/get-posts', async (req, res) => {
+  await Post.find({}).then(postList => {
+    res.send(postList);
+  })
+})
 
 app.listen(8080, () => {
   console.log(`Server started at: http://localhost:${PORT}`)
