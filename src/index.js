@@ -67,8 +67,16 @@ const Post = mongoose.model('Post', postSchema);
 const User = mongoose.model('User', userSchema);
 
 /**
- * Route imports
+ * Computations
  */
+const generateUserLink = function(email) {
+  const atIndex = email.indexOf('@');
+  if (!atIndex) {
+    return;
+  }
+
+  return email.slice(0, atIndex);
+}
 // const login = require('./routes/login');
 // const register = require('./routes/register');
 
@@ -77,7 +85,7 @@ const User = mongoose.model('User', userSchema);
  */
 app.post('/login', async (req, res) => {
   const {username, password} = req.body;
-  const foundUser = User.findOne({username}, (err, found) => {
+  User.findOne({username}, (err, found) => {
     if (!err) {
       if(found && found.password === password) {
         const token = jwt.sign({name: found.username}, 'hello', { expiresIn: "1h" });
@@ -87,7 +95,8 @@ app.post('/login', async (req, res) => {
         }).send({
           username: found.username,
           name: found.name,
-          surname: found.surname
+          surname: found.surname,
+          pageLink: generateUserLink(found.username)
         });
       } else {
         const error = {
@@ -100,8 +109,7 @@ app.post('/login', async (req, res) => {
       console.log(err);
       res.send("Some error occured!")
     }
-}).catch(err => console.log("Error occured, " + err));
-  console.log(foundUser);
+  }).catch(err => console.log("Error occured, " + err));
 });
 
 app.post('/register', async (req, res) => {
@@ -146,6 +154,26 @@ app.post('/create-post', async (req, res) => {
 app.get('/get-posts', async (req, res) => {
   await Post.find({}).then(postList => {
     res.send(postList);
+  })
+})
+
+app.post('/get-user', async (req, res) => {
+  const { username } = req.body;
+  await User.findOne({username}, (err, found) => {
+    if(found) {
+      return res.send({
+        username: found.username,
+        name: found.name,
+        surname: found.surname,
+        pageLink: generateUserLink(found.username)
+      });
+    } else {
+      const error = {
+        errorDescription: 'Wrong Username or Password',
+        errorClass: 'toast-error',
+      };
+      res.send({ error });
+    };
   })
 })
 
